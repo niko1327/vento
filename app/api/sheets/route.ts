@@ -38,7 +38,7 @@ export async function GET(request: Request) {
 
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: "Sheet1!A2:Z1000",
+      range: "External1!A2:Z1000",
     });
 
     return NextResponse.json({
@@ -55,3 +55,4 @@ export async function GET(request: Request) {
     );
   }
 }
+
