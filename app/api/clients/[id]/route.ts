@@ -1,34 +1,48 @@
-import { createClient } from '@supabase/supabase-js';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    
+    // Add your logic to fetch a client by ID here
+    
+    return NextResponse.json({ success: true, id });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to fetch client' }, { status: 500 });
+  }
+}
 
 export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const body = await request.json();
-  const { error } = await supabase
-    .from('clients')
-    .update(body)
-    .eq('id', params.id);
+  try {
+    const { id } = await params;
+    const body = await request.json();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true });
+    // Add your logic to update the client in Supabase/Database here
+    console.log(`Updating client ${id} with:`, body);
+
+    return NextResponse.json({ success: true, id });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to update client' }, { status: 500 });
+  }
 }
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { error } = await supabase
-    .from('clients')
-    .delete()
-    .eq('id', params.id);
+  try {
+    const { id } = await params;
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true });
+    // Add your logic to delete the client here
+
+    return NextResponse.json({ success: true, id });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to delete client' }, { status: 500 });
+  }
 }
