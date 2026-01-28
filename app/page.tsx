@@ -950,13 +950,7 @@ export default function InvoiceApp() {
                       </table>
 
                       {/* VAT Exemption Note */}
-                      <div
-                        className="text-xs mb-8 italic"
-                        style={{ fontSize: "9px", color: "#666" }}
-                      >
-                        Zero VAT Exempt from VAT in accordance with Bulgarian
-                        VAT legislation, art.69
-                      </div>
+                      
 
                       {/* Bank Details */}
                       <div className="mb-6" style={{ fontSize: "10px" }}>
