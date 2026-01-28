@@ -133,26 +133,29 @@ export default function InvoiceApp() {
     return `${day}/${month}/${year}`;
   };
 
-  const selectTrip = (row: string[]) => {
-    const clientShortName = row[1] || "";
+  const selectTrip = (trip: any) => {
+    console.log("Trip clicked:", trip); // ADD THIS
+    console.log("Income value:", trip.income); // ADD THIS
+
+    const clientShortName = trip.client;
     const matchedClient = clients.find(
       (c) =>
         c.short_name?.toLowerCase() === clientShortName.toLowerCase() ||
         c.client_name?.toLowerCase().includes(clientShortName.toLowerCase()),
     );
 
-    const loadLocation = row[6] || "";
-    const unloadLocation = row[9] || "";
-    const plate = row[3] || "";
-    const orderRef = row[14] || "";
-    const diff = row[13] || "0";
-
-    const routeTitle = `${loadLocation} - ${unloadLocation}`;
+    const loadLocation =
+      `${trip.loadDate || ""} ${trip.loadCountry || ""} ${trip.loadCity || ""}`.trim();
+    const unloadLocation =
+      `${trip.unloadDate || ""} ${trip.unloadCountry || ""} ${trip.unloadCity || ""}`.trim();
+    const plate = trip.plates;
+    const orderRef = trip.orderNumber;
+    const routeTitle = `${trip.loadCity || "?"}, ${trip.loadCountry || "?"} - ${trip.unloadCity || "?"}, ${trip.unloadCountry || "?"}`;
 
     setInvoiceData({
       invoiceNumber: generateInvoiceNumber(),
       date: getTodayDate(),
-      sender: myCompany,
+      sender: { ...myCompany },
       client: {
         name: matchedClient?.client_name || clientShortName || "Unknown Client",
         address: matchedClient?.address || "",
@@ -168,7 +171,7 @@ export default function InvoiceApp() {
         unloadFull: unloadLocation,
         routeTitle,
       },
-      price: diff,
+      price: trip.income || "0",
       vatRate: "0",
       currency: "eur",
     });
@@ -391,17 +394,17 @@ export default function InvoiceApp() {
                       👉 Click button above to load trips
                     </div>
                   ) : (
-                    sheetData.map((row, idx) => {
-                      const clientName = row[1] || "Unknown";
-                      const loadLocation = row[6] || "?";
-                      const unloadLocation = row[9] || "?";
-                      const diff = row[13] || "0";
-                      const orderRef = row[14] || "";
+                    sheetData.map((trip: any, idx) => {
+                      const clientName = trip.client || "Unknown";
+                      const loadLocation = trip.loadCity || "?";
+                      const unloadLocation = trip.unloadCity || "?";
+                      const diff = trip.income || "0";
+                      const orderRef = trip.orderNumber || "";
 
                       return (
                         <button
                           key={idx}
-                          onClick={() => selectTrip(row)}
+                          onClick={() => selectTrip(trip)}
                           className="w-full p-3 border-b hover:bg-blue-50 transition-colors text-left"
                         >
                           <div className="font-medium text-gray-900 text-sm mb-1">
@@ -413,7 +416,7 @@ export default function InvoiceApp() {
                           <div className="flex items-center justify-between text-xs">
                             <span className="text-gray-500">#{orderRef}</span>
                             <span className="font-semibold text-green-600">
-                              €{diff}
+                              {diff}
                             </span>
                           </div>
                         </button>
@@ -809,6 +812,7 @@ export default function InvoiceApp() {
                                   fontSize: "11px",
                                   textAlign: "right",
                                   width: "100%",
+                                  color: "#000", // ← ADD THIS to make sure text is visible
                                 }}
                               />
                             </td>
