@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { Printer, RefreshCw, Truck, Plus, Trash2, Edit } from "lucide-react";
+import { supabase } from "@/lib/supabase"; // adjust path as needed
 
 interface Client {
   id: number;
@@ -105,6 +106,44 @@ export default function InvoiceApp() {
   );
   const componentRef = useRef<HTMLDivElement>(null);
 
+  // ADD THIS HELPER FUNCTION
+  const formatDateWithYear = (dateStr: string) => {
+    if (!dateStr) return "";
+
+    const clean = dateStr.trim();
+
+    // Match "DD/MM", "DD.MM", or "DD-MM" format
+    const match = clean.match(/^(\d{1,2})[./-](\d{1,2})$/);
+
+    if (match) {
+      const day = match[1].padStart(2, "0");
+      const month = match[2].padStart(2, "0");
+      const year = new Date().getFullYear();
+
+      return `${day}.${month}.${year}`;
+    }
+
+    return clean;
+  };
+
+  // 1. FETCH CLIENTS ON MOUNT
+  useEffect(() => {
+    const fetchClients = async () => {
+      const { data, error } = await supabase
+        .from("clients")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching clients:", error);
+      } else if (data) {
+        setClients(data as Client[]);
+      }
+    };
+
+    fetchClients();
+  }, []);
+
   const loadSheetData = async () => {
     setLoading(true);
     try {
@@ -140,8 +179,8 @@ export default function InvoiceApp() {
     return Number.isFinite(n) ? n : 0;
   };
   const selectTrip = (trip: any) => {
-    console.log("Trip clicked:", trip); // ADD THIS
-    console.log("Income value:", trip.income); // ADD THIS
+    console.log("Trip clicked:", trip);
+    console.log("Income value:", trip.income);
 
     const clientShortName = trip.client;
     const matchedClient = clients.find(
@@ -150,10 +189,14 @@ export default function InvoiceApp() {
         c.client_name?.toLowerCase().includes(clientShortName.toLowerCase()),
     );
 
+    // FORMAT DATES WITH YEAR
+    const fLoadDate = formatDateWithYear(trip.loadDate);
+    const fUnloadDate = formatDateWithYear(trip.unloadDate);
+
     const loadLocation =
-      `${trip.loadDate || ""} ${trip.loadCountry || ""} ${trip.loadCity || ""}`.trim();
+      `${fLoadDate} ${trip.loadCountry || ""} ${trip.loadCity || ""}`.trim();
     const unloadLocation =
-      `${trip.unloadDate || ""} ${trip.unloadCountry || ""} ${trip.unloadCity || ""}`.trim();
+      `${fUnloadDate} ${trip.unloadCountry || ""} ${trip.unloadCity || ""}`.trim();
     const plate = trip.plates;
     const orderRef = trip.orderNumber;
     const routeTitle = `${trip.loadCity || "?"}, ${trip.loadCountry || "?"} - ${trip.unloadCity || "?"}, ${trip.unloadCountry || "?"}`;
@@ -225,7 +268,6 @@ export default function InvoiceApp() {
 
   const addClient = () => {
     setEditingClient({
-      id: Date.now(),
       client_name: "",
       short_name: "",
       address: "",
@@ -236,27 +278,72 @@ export default function InvoiceApp() {
     });
   };
 
-  const saveClient = () => {
-    if (!editingClient || !editingClient.client_name) {
+  const saveClient = async () => {
+    if (!editingClient?.client_name) {
       alert("Client name is required");
       return;
     }
 
-    if (editingClient.id && clients.find((c) => c.id === editingClient.id)) {
-      setClients((prev) =>
-        prev.map((c) =>
-          c.id === editingClient.id ? (editingClient as Client) : c,
-        ),
-      );
-    } else {
-      setClients((prev) => [...prev, editingClient as Client]);
+    try {
+      const clientData: any = {
+        client_name: editingClient.client_name,
+        short_name: editingClient.short_name,
+        address: editingClient.address,
+        vat_number: editingClient.vat_number,
+        bank_name: editingClient.bank_name,
+        iban: editingClient.iban,
+        swift: editingClient.swift,
+      };
+
+      // Only include ID if it's an existing client (update)
+      if (editingClient.id) {
+        clientData.id = editingClient.id;
+      }
+
+      const { data, error } = await supabase
+        .from("clients")
+        .upsert(clientData)
+        .select();
+
+      if (error) {
+        alert("Error saving: " + error.message);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setClients((prev) => {
+          if (editingClient.id) {
+            // Update existing
+            return prev.map((c) =>
+              c.id === editingClient.id ? (data[0] as Client) : c,
+            );
+          }
+          // Add new
+          return [data[0] as Client, ...prev];
+        });
+        setEditingClient(null);
+      }
+    } catch (err) {
+      console.error("Save error:", err);
+      alert("Failed to save client");
     }
-    setEditingClient(null);
   };
 
-  const deleteClient = (id: number) => {
-    if (confirm("Delete this client?")) {
+  const deleteClient = async (id: number) => {
+    if (!confirm("Delete this client?")) return;
+
+    try {
+      const { error } = await supabase.from("clients").delete().eq("id", id);
+
+      if (error) {
+        alert("Error deleting: " + error.message);
+        return;
+      }
+
       setClients((prev) => prev.filter((c) => c.id !== id));
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("Failed to delete client");
     }
   };
 
