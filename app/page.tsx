@@ -132,7 +132,13 @@ export default function InvoiceApp() {
     const year = today.getFullYear();
     return `${day}/${month}/${year}`;
   };
-
+  const toNumber = (v: any) => {
+    const s = String(v ?? "")
+      .replace(/[^\d.,-]/g, "")
+      .replace(/,/g, "");
+    const n = Number(s);
+    return Number.isFinite(n) ? n : 0;
+  };
   const selectTrip = (trip: any) => {
     console.log("Trip clicked:", trip); // ADD THIS
     console.log("Income value:", trip.income); // ADD THIS
@@ -171,8 +177,8 @@ export default function InvoiceApp() {
         unloadFull: unloadLocation,
         routeTitle,
       },
-      price: trip.income || "0",
-      vatRate: "0",
+      price: toNumber(trip.income),
+      vatRate: 0,
       currency: "eur",
     });
   };
