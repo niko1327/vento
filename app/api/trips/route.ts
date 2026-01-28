@@ -11,7 +11,7 @@ export async function GET() {
     const sheets = google.sheets({ version: 'v4', auth });
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SHEET_ID!,
-      range: 'External!A:Z',
+      range: 'External1!A:Z',
     });
 
     const validRows = (response.data.values || [])
@@ -23,3 +23,4 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
