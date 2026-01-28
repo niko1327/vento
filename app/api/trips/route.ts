@@ -15,8 +15,8 @@ export async function GET() {
     });
 
     const validRows = (response.data.values || [])
-      .filter(row => row[2] && row[2] !== 'Client')
-      .reverse();
+      .filter(row => row[2] && row[2] !== 'Client');
+      // .reverse() REMOVED to make sort order opposite
 
     return NextResponse.json(validRows);
   } catch (error: any) {
