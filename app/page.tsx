@@ -94,11 +94,11 @@ export default function InvoiceApp() {
   const [clients, setClients] = useState<Client[]>([]);
   const [myCompany, setMyCompany] = useState<Partial<CompanySettings>>({
     name: '"VENTO TRANSPORT" OOD',
-    address: '"Otets Paisiy, gr. Petrich 2850, BULGARIA',
+    address: '"Otec Paisii n. 51 2850 Petrich, Bulgaria',
     vat: "BG207324277",
-    bank: "Komercijalna Banka AD",
-    iban: "MK07300100012345678999",
-    swift: "KOBAMKSK",
+    bank: "Unicredit Bulbank",
+    iban: "BG23UNCR70001526680716",
+    swift: "UNCRBGSF",
   });
   const [invoiceData, setInvoiceData] = useState<InvoiceData | null>(null);
   const [editingClient, setEditingClient] = useState<Partial<Client> | null>(
